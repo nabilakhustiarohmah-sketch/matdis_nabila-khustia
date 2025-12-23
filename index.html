@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Analisis Sifat Relasi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            margin: 0;
+            padding-bottom: 40px;
+        }
+
+        /* HEADER */
+        .header {
+            width: 100%;
+            padding: 25px 0;
+            background-color: #2c3e50;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 700px;
+            background: white;
+            padding: 25px;
+            margin: 30px auto;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h2, h3 {
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #bbb;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        /* TOMBOL HAPUS */
+        .hapus {
+            background: #e63946;
+            margin-top: 10px;
+        }
+
+        .hapus:hover {
+            background: #b71c1c;
+        }
+
+        /* HASIL */
+        .hasil {
+            padding: 20px;
+            margin-top: 25px;
+            background: #eef1f7;
+            border-left: 6px solid #4B79A1;
+            border-radius: 5px;
+        }
+
+        /* TABLE */
+        .table-box {
+            margin-top: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        table th, table td {
+            border: 1px solid #aaa;
+            padding: 8px;
+        }
+
+        table th {
+            background: #4B79A1;
+            color: white;
+        }
+
+        .ya { color: green; font-weight: bold; }
+        .tidak { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Analisis Sifat Relasi</h1>
+</div>
+
+<div class="container">
+    <h2>Masukkan Himpunan dan Relasi</h2>
+
+    <form id="formRelasi">
+        <label>Himpunan A (pisahkan spasi)</label>
+        <input type="text" id="inputA" placeholder="contoh: 1 2 3" required>
+
+        <label>Relasi R (format: a,b pisah baris)</label>
+        <textarea id="inputR" rows="5" placeholder="contoh:
+1,1
+1,2
+2,1
+2,2
+3,3" required></textarea>
+
+        <button type="submit">Analisis Relasi</button>
+        <button type="button" class="hapus" onclick="hapusSemua()">Hapus Semua</button>
+    </form>
+
+    <div id="output"></div>
+</div>
+
+<script>
+document.getElementById("formRelasi").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const A = document.getElementById("inputA").value.trim().split(/\s+/);
+    const rawR = document.getElementById("inputR").value.trim().split("\n");
+
+    let R = [];
+    rawR.forEach(item => {
+        let [a, b] = item.split(",");
+        if (a && b) R.push([a.trim(), b.trim()]);
+    });
+
+    const isReflexive = (A, R) =>
+        A.every(x => R.some(p => p[0] === x && p[1] === x));
+
+    const isSymmetric = R =>
+        R.every(p => R.some(q => q[0] === p[1] && q[1] === p[0]));
+
+    const isAntisymmetric = R =>
+        !R.some(p => p[0] !== p[1] && R.some(q => q[0] === p[1] && q[1] === p[0]));
+
+    const isTransitive = R =>
+        R.every(p =>
+            R.every(q =>
+                p[1] !== q[0] || R.some(r => r[0] === p[0] && r[1] === q[1])
+            )
+        );
+
+    const hasilRef = isReflexive(A,R);
+    const hasilSim = isSymmetric(R);
+    const hasilAnti = isAntisymmetric(R);
+    const hasilTrans = isTransitive(R);
+
+    const yt = v => v ? "<span class='ya'>Ya</span>" : "<span class='tidak'>Tidak</span>";
+
+    let tabelSifat = `
+    <div class="table-box">
+        <h3>Tabel Sifat Relasi</h3>
+        <table>
+            <tr><th>Sifat Relasi</th><th>Hasil</th></tr>
+            <tr><td>Refleksif</td><td>${yt(hasilRef)}</td></tr>
+            <tr><td>Simetris (Setangkup)</td><td>${yt(hasilSim)}</td></tr>
+            <tr><td>Tolak Setangkup (Antisimetris)</td><td>${yt(hasilAnti)}</td></tr>
+            <tr><td>Menghantar (Transitif)</td><td>${yt(hasilTrans)}</td></tr>
+        </table>
+    </div>`;
+
+    let matriks = `
+    <div class="table-box">
+        <h3>Matriks Relasi</h3>
+        <table>
+            <tr>
+                <th>A \\ A</th>
+                ${A.map(x => `<th>${x}</th>`).join("")}
+            </tr>
+            ${A.map(row => `
+                <tr>
+                    <th>${row}</th>
+                    ${A.map(col =>
+                        R.some(p => p[0] === row && p[1] === col)
+                        ? "<td>1</td>"
+                        : "<td>0</td>"
+                    ).join("")}
+                </tr>
+            `).join("")}
+        </table>
+    </div>`;
+
+    document.getElementById("output").innerHTML = tabelSifat + matriks;
+});
+
+function hapusSemua() {
+    document.getElementById("formRelasi").reset();
+    document.getElementById("output").innerHTML = "";
+}
+</script>
+
+</body>
+</html>
